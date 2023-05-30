@@ -114,6 +114,28 @@ class _SocketPageState extends State<SocketPage> {
               ),
             ),
           ),
+          InkWell(
+            onTap: (){
+              debugPrint("点击了pgm转jpg按钮");
+              socketUtil(context, "192.168.0.101", 9999, '{"method":"pgmToJpg"}');
+            },
+            child: Container(
+              alignment: Alignment.center,
+              decoration:const BoxDecoration(
+                //背景
+                color: Colors.blue,
+                //设置四周圆角 角度
+                borderRadius: BorderRadius.all(Radius.circular(8.0)),
+              ),
+              child: Text(
+                "pgm转jpg",
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
         ],
 
       ),
