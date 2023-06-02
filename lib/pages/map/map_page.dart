@@ -14,12 +14,16 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
+  //点位名称输入框
+  final TextEditingController _markTextEditingController = TextEditingController();
+  //输入的点位名称
+  final String _makeName = "";
   //点击地图后记录点击位置在地图上的像素位置
   Offset localPosition = const Offset(-1, -1);
   //点击地图后获取像素颜色
   Color color = const Color(0x00000000);
   //获取当前点击像素颜色
-  Color c = Color(0x000000);
+  Color c = const Color(0x00000000);
   //获取当前点击地图像素位置
   Offset p = const Offset(-1, -1);
   bool is_show_msg = true;
@@ -51,6 +55,7 @@ class _MapPageState extends State<MapPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text("地图"),
         elevation: 0.1,
@@ -82,7 +87,7 @@ class _MapPageState extends State<MapPage> {
     ];
 
     print(color);
-    if(this.color == Color(0xffdcdcdc) || this.color == Color(0xffcdcdcd)){
+    if(this.color == const Color(0xffdcdcdc) || this.color == Color(0xffcdcdcd)){
       Toast.toast(context,msg: "所选位置机器人可能无法到达",showTime: 1500);
     }else{
       int count = markList.length + 1;
@@ -98,7 +103,6 @@ class _MapPageState extends State<MapPage> {
               child: Container(
                 width: 30,
                 height: 30,
-                color: Colors.blue,
                 child: const Image(
                   width: 20,
                   height: 20,
@@ -137,9 +141,11 @@ class _MapPageState extends State<MapPage> {
                 );
                 WidgetsBinding.instance!.addPostFrameCallback((_) {
                   if (mounted) {
+
                     //判断坐标列表里是否存在点击的坐标范围
                     //bool is_offset = _offsetRange(localPosition);
-                    if(offsetList.length==0){
+                    //TODO::这里有BUG，第一次点击地图未保存，会循环触发这里，需要解决
+                    if(offsetList.length==0 && localPosition.dx.toInt() > 0){
                       setState(() {
                         this.color = color;
                         _getTapPosition(context);
@@ -197,55 +203,107 @@ class _MapPageState extends State<MapPage> {
     return true;
 
   }
-
-  void showBottomSheet(BuildContext context) {
-    //用于在底部打开弹框的效果
-    showModalBottomSheet(
-        builder: (BuildContext context) {
-          //构建弹框中的内容
-          return buildBottomSheetWidget(context);
-        },
-        backgroundColor: Colors.transparent,//重要
-        context: context);
-  }
-  ///底部弹出框的内容
-  Widget buildBottomSheetWidget(BuildContext context) {
-    return Container(
-        height: 250.h,
-        decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-                topLeft:  Radius.circular(25.0),
-                topRight: Radius.circular(25.0))),
-        child: Column(
-          children: [
-            Text(
-              "邀请好友",
-              style: TextStyle(
-                color: Color(0xFF36393D),
-                fontSize: 46.w,
-              ),
-            ),
-            Container(
-              width: MediaQuery.of(context).size.width,
-              padding: const EdgeInsets.only(left: 10),
-              child: const Text("去邀请"),
-            ),
-
-          ],
-        ));
-  }
+  /// 底部弹窗
   Future<Future<int?>> _showBasicModalBottomSheet(context, List<String> options) async {
     return showModalBottomSheet<int>(
-      isScrollControlled: false,
+      isScrollControlled: true,
       context: context,
       builder: (BuildContext context) {
         return Container(
-          height: 300.h,
-          color: Colors.red,
-          child: const Column(
+          padding: EdgeInsets.all(10.h),
+          height: 200.h,
+          color: Colors.white,
+          child: Column(
             children: [
-              //TextField(),
+
+              TextField(
+                controller: _markTextEditingController,
+                keyboardType: TextInputType.text,
+                textInputAction: TextInputAction.done,
+                decoration: const InputDecoration(
+                  hintText: "请输入点位名称",
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.red,
+                      width: 5,
+                      style: BorderStyle.none, // 隐藏边框
+                    ),
+                  ),
+                ),
+
+              ),
+              SizedBox(
+                height: 73.h,
+              ),
+              Row(
+                children: [
+                  InkWell(
+                    onTap: (){
+                      print("点击了取消按钮");
+
+                      print(offsetList);
+                      print(markList);
+                      print("markList.length***************** "+markList.length.toString());
+                      print("offsetList.length################### "+offsetList.length.toString());
+                      if(markList.length > 1){
+                        markList.removeAt(markList.length-1);
+                        offsetList.removeAt(offsetList.length-1);
+                      }
+                      Navigator.pop(context);
+
+                    },
+                    child: Container(
+                      width: 150.w,
+                      height: 50.h,
+
+                      decoration: BoxDecoration(
+                          color: Colors.black38,
+                          borderRadius: BorderRadius.all(Radius.circular(10.h))
+                      ),
+                      child: Center(
+                        child: Text(
+                          "取   消",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 20.sp,
+                            color: Colors.black54,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 55.w,
+                  ),
+                  InkWell(
+                    onTap: (){
+                      print("点击了保存按钮");
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      width: 150.w,
+                      height: 50.h,
+
+                      decoration: BoxDecoration(
+                          color: Colors.blue,
+                          borderRadius: BorderRadius.all(Radius.circular(10.h))
+                      ),
+                      child: Center(
+                        child: Text(
+                          "保   存",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 20.sp,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         );
